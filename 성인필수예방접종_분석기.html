@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>성인 필수예방접종 분석기</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
+      font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+      color: #f8fafc;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+    }
+    .card-name {
+      background: rgba(96,165,250,0.08);
+      border: 1.5px solid rgba(96,165,250,0.35);
+    }
+    .card-birth {
+      background: rgba(168,85,247,0.08);
+      border: 1.5px solid rgba(168,85,247,0.35);
+    }
+    .card-conditions {
+      background: rgba(34,197,94,0.06);
+      border: 1.5px solid rgba(34,197,94,0.3);
+    }
+    .section-tag {
+      display: inline-block; font-size: 11px; font-weight: 800;
+      letter-spacing: 0.5px; padding: 3px 10px; border-radius: 6px;
+    }
+    .cbtn {
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.18);
+      border-radius: 12px; padding: 12px 14px; cursor: pointer;
+      transition: all .2s; display: flex; align-items: center; gap: 10px;
+      color: #e2e8f0; font-size: 13px; font-weight: 600;
+      width: 100%; text-align: left; font-family: inherit;
+    }
+    .cbtn:hover { background: rgba(34,197,94,0.18); border-color: rgba(34,197,94,0.6); color: #fff; }
+    .cbtn.on    { background: rgba(34,197,94,0.22); border-color: #22c55e; color: #bbf7d0; box-shadow: 0 0 0 1px rgba(34,197,94,0.3); }
+    .abtn {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border: none; border-radius: 14px; color: #fff;
+      font-size: 17px; font-weight: 700; padding: 16px; cursor: pointer;
+      width: 100%; transition: all .2s; box-shadow: 0 4px 24px rgba(59,130,246,0.35);
+      font-family: inherit;
+    }
+    .abtn:hover { transform: translateY(-1px); box-shadow: 0 8px 32px rgba(59,130,246,0.45); }
+    .abtn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .rbtn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px; color: #94a3b8; font-size: 14px;
+      padding: 11px; cursor: pointer; width: 100%;
+      transition: all .2s; font-family: inherit;
+    }
+    .rbtn:hover { background: rgba(255,255,255,0.12); color: #e2e8f0; }
+    .ainput {
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 12px; color: #fff; font-size: 18px; font-weight: 600;
+      padding: 14px 18px; width: 100%; outline: none;
+      transition: all .2s; font-family: inherit;
+    }
+    .ainput:focus { border-color: #60a5fa; background: rgba(96,165,250,0.12); }
+    .ainput::placeholder { color: #475569; font-weight: 400; font-size: 15px; }
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .barfill { height: 100%; border-radius: 100px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+    .fadeup { animation: fu .45s ease; }
+    @keyframes fu { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .tag   { font-size: 12px; padding: 3px 9px; border-radius: 6px; }
+    .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; }
+
+    .vaccine-card {
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .vaccine-card.priority::before {
+      content: "1순위";
+      position: absolute;
+      top: 0; right: 0;
+      background: #ef4444;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 0 14px 0 10px;
+      letter-spacing: 0.5px;
+    }
+    .vaccine-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .vaccine-name {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 15px; font-weight: 800;
+    }
+    .vaccine-mult {
+      font-size: 20px; font-weight: 900;
+      white-space: nowrap;
+    }
+    .vaccine-mult span { font-size: 11px; font-weight: 700; }
+    .vaccine-urgency {
+      display: inline-block;
+      font-size: 11px; font-weight: 800;
+      padding: 3px 9px; border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .vaccine-explain {
+      font-size: 12px; line-height: 1.7; color: #cbd5e1;
+    }
+    .vaccine-bar-wrap {
+      background: rgba(255,255,255,0.08); border-radius: 100px;
+      height: 6px; overflow: hidden; margin: 8px 0;
+    }
+    .vaccine-bar-fill {
+      height: 100%; border-radius: 100px;
+      transition: width 1.2s cubic-bezier(.4,0,.2,1);
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const { useState } = React;
+const e = React.createElement;
+
+// ════════════════════════════════════════════════════
+//  공통 기저질환 / 위험인자 목록
+// ════════════════════════════════════════════════════
+const CONDITIONS = [
+  { id: "hypertension",      label: "고혈압",                        icon: "🫀" },
+  { id: "diabetes",          label: "당뇨병",                        icon: "🩸" },
+  { id: "dyslipidemia",      label: "고지혈증",                      icon: "💉" },
+  { id: "heartDisease",      label: "심장질환",                      icon: "❤️" },
+  { id: "lungDisease",       label: "만성폐질환 (COPD/천식)",        icon: "🫁" },
+  { id: "bronchiectasis",    label: "호흡기질환 (기관지확장증 등)",  icon: "🌬️" },
+  { id: "kidneyDisease",     label: "만성신장질환",                  icon: "🫘" },
+  { id: "liver",             label: "만성간질환",                    icon: "🍃" },
+  { id: "thyroid",           label: "갑상선질환",                    icon: "🦋" },
+  { id: "smoking",           label: "흡연",                          icon: "🚬" },
+  { id: "obesity",           label: "비만 (BMI 30 이상)",            icon: "⚖️" },
+  { id: "longTermCare",      label: "장기요양시설 거주",             icon: "🏥" },
+  { id: "cancerCured",       label: "고형암 (완치)",                 icon: "🎗️" },
+  { id: "immunocompromised", label: "면역저하 (암/스테로이드 등)",   icon: "🛡️" },
+  { id: "asplenia",          label: "비장 절제술",                   icon: "⚕️" },
+  { id: "pregnant",          label: "임신 중",                       icon: "🤰" },
+  { id: "alcoholUse",        label: "잦은 음주",                     icon: "🍺" },
+  { id: "liverDiseaseHepRisk",label: "혈액투석 / 의료기관 종사",      icon: "🩹" },
+];
+
+// ════════════════════════════════════════════════════
+//  1. 폐렴구균 — 최우선 백신 (PCV20)
+// ════════════════════════════════════════════════════
+function calcPneumoScore(age, sel) {
+  let s = 0;
+  if (age >= 65) s += 40;
+  else if (age >= 50) s += 25;
+  else if (age >= 19) s += 5;
+  if (sel.immunocompromised) s += 30;
+  if (sel.asplenia)          s += 30;
+  if (sel.cancerCured)       s += 25;
+  if (sel.kidneyDisease)     s += 20;
+  if (sel.lungDisease)       s += 20;
+  if (sel.heartDisease)      s += 20;
+  if (sel.liver)             s += 20;
+  if (sel.longTermCare)      s += 20;
+  if (sel.bronchiectasis)    s += 21;
+  if (sel.diabetes)          s += 18;
+  if (sel.thyroid)           s += 15;
+  if (sel.smoking)           s += 14;
+  if (sel.hypertension)      s += 14;
+  if (sel.dyslipidemia)      s += 14;
+  if (sel.obesity)           s += 8;
+  return Math.min(s, 100);
+}
+
+// ════════════════════════════════════════════════════
+//  2. 독감 (인플루엔자) — 매년 1회, 65세 이상 + 만성질환 고위험
+// ════════════════════════════════════════════════════
+function calcFluScore(age, sel) {
+  let s = 0;
+  if (age >= 65) s += 35;
+  else if (age >= 50) s += 18;
+  else if (age >= 19) s += 8;
+  if (sel.pregnant)          s += 25;
+  if (sel.lungDisease)       s += 22;
+  if (sel.heartDisease)      s += 20;
+  if (sel.immunocompromised) s += 22;
+  if (sel.kidneyDisease)     s += 18;
+  if (sel.liver)             s += 16;
+  if (sel.diabetes)          s += 16;
+  if (sel.longTermCare)      s += 18;
+  if (sel.obesity)           s += 10;
+  if (sel.smoking)           s += 8;
+  if (sel.asplenia)          s += 10;
+  return Math.min(s, 100);
+}
+
+// ════════════════════════════════════════════════════
+//  3. 대상포진 — 50세 이상 권장, 면역저하 시 더 위험
+// ════════════════════════════════════════════════════
+function calcZosterScore(age, sel) {
+  let s = 0;
+  if (age >= 65) s += 38;
+  else if (age >= 50) s += 30;
+  else if (age >= 19) s += 3;
+  if (sel.immunocompromised) s += 28;
+  if (sel.diabetes)          s += 14;
+  if (sel.kidneyDisease)     s += 14;
+  if (sel.lungDisease)       s += 10;
+  if (sel.heartDisease)      s += 10;
+  if (sel.cancerCured)       s += 18;
+  if (sel.longTermCare)      s += 12;
+  return Math.min(s, 100);
+}
+
+// ════════════════════════════════════════════════════
+//  4. A형간염 — 면역 없는 성인, 간질환자 고위험
+// ════════════════════════════════════════════════════
+function calcHepAScore(age, sel) {
+  let s = 0;
+  if (age >= 19 && age < 40) s += 25; // 1980년 이후 출생자는 항체 보유율 낮음
+  else if (age >= 40) s += 10;
+  if (sel.liver)             s += 35;
+  if (sel.alcoholUse)        s += 18;
+  if (sel.immunocompromised) s += 15;
+  if (sel.diabetes)          s += 6;
+  return Math.min(s, 100);
+}
+
+// ════════════════════════════════════════════════════
+//  5. B형간염 — 미접종 성인, 의료종사자·간질환 고위험
+// ════════════════════════════════════════════════════
+function calcHepBScore(age, sel) {
+  let s = 0;
+  if (age >= 19) s += 12;
+  if (sel.liverDiseaseHepRisk) s += 35;
+  if (sel.liver)               s += 30;
+  if (sel.kidneyDisease)       s += 20;
+  if (sel.immunocompromised)   s += 18;
+  if (sel.diabetes)            s += 12;
+  if (sel.alcoholUse)          s += 10;
+  return Math.min(s, 100);
+}
+
+// ════════════════════════════════════════════════════
+//  6. RSV — 60세 이상 또는 고위험 만성질환자
+// ════════════════════════════════════════════════════
+function calcRsvScore(age, sel) {
+  let s = 0;
+  if (age >= 75) s += 42;
+  else if (age >= 60) s += 28;
+  else if (age >= 50) s += 6;
+  if (sel.lungDisease)       s += 28;
+  if (sel.heartDisease)      s += 24;
+  if (sel.kidneyDisease)     s += 18;
+  if (sel.diabetes)          s += 16;
+  if (sel.immunocompromised) s += 20;
+  if (sel.longTermCare)      s += 20;
+  if (sel.bronchiectasis)    s += 18;
+  if (sel.obesity)           s += 8;
+  return Math.min(s, 100);
+}
+
+// ════════════════════════════════════════════════════
+//  공통 등급/배수 산정 (폐렴구균 기준 체계와 동일하게 통일)
+// ════════════════════════════════════════════════════
+function getGrade(score) {
+  if (score >= 65) return { label: "매우 높음", color: "#ef4444", grade: "A" };
+  if (score >= 35) return { label: "높음",      color: "#f97316", grade: "B" };
+  if (score >= 15) return { label: "중간",      color: "#eab308", grade: "C" };
+  return                  { label: "낮음",      color: "#22c55e", grade: "D" };
+}
+function getMultiplier(score) {
+  if (score >= 80) return 12.0;
+  if (score >= 65) return 8.0;
+  if (score >= 50) return 5.0;
+  if (score >= 35) return 3.0;
+  if (score >= 15) return 1.8;
+  return 1.0;
+}
+function getUrgency(score) {
+  if (score >= 35) return "적극 권장";
+  if (score >= 15) return "검토 권장";
+  return "해당 없음";
+}
+
+// ════════════════════════════════════════════════════
+//  백신 메타데이터 + 설명 로직
+//  order: 항상 폐렴구균이 0번 = 최우선 고정
+// ════════════════════════════════════════════════════
+function buildVaccines(age, sel) {
+  const list = [
+    {
+      id: "pneumo",
+      name: "폐렴구균 (PCV20)",
+      icon: "🫁",
+      priority: true,
+      score: calcPneumoScore(age, sel),
+      vaccine: "PCV20 1회 접종",
+      explainHigh: "65세 이상 또는 만성질환·면역저하 상태에서는 폐렴구균에 의한 중증 폐렴·균혈증·수막염 위험이 크게 높아집니다. 모든 성인 예방접종 중 최우선으로 권장됩니다.",
+      explainMid: "연령 또는 동반 질환으로 인해 향후 폐렴구균 감염 시 합병증 위험이 일반인보다 높습니다.",
+      explainLow: "현재 특별한 위험인자가 없습니다. 65세 이상이 되면 필수 접종 대상이 됩니다.",
+    },
+    {
+      id: "flu",
+      name: "독감 (인플루엔자)",
+      icon: "🤧",
+      priority: false,
+      score: calcFluScore(age, sel),
+      vaccine: "인플루엔자 백신 매년 1회 접종",
+      explainHigh: "고령 또는 심장·폐·신장 질환, 임신, 면역저하 상태에서는 독감 합병증(폐렴, 입원, 사망)으로 이어질 위험이 크게 높아집니다. 매년 가을 접종이 적극 권장됩니다.",
+      explainMid: "연령 또는 동반 질환으로 독감 합병증 위험이 일반인보다 높습니다.",
+      explainLow: "현재 특별한 위험인자가 없으나, 매년 접종은 일반적으로 권장됩니다.",
+    },
+    {
+      id: "zoster",
+      name: "대상포진",
+      icon: "🩹",
+      priority: false,
+      score: calcZosterScore(age, sel),
+      vaccine: "재조합 대상포진 백신 2회 접종",
+      explainHigh: "50세 이상, 특히 면역저하·당뇨·만성질환이 있는 경우 대상포진 발생 위험과 대상포진 후 신경통 등 합병증 위험이 크게 증가합니다.",
+      explainMid: "연령 또는 동반 질환으로 대상포진 위험이 일반인보다 높습니다.",
+      explainLow: "현재 특별한 위험인자가 없습니다. 50세 이상이 되면 접종을 권장합니다.",
+    },
+    {
+      id: "hepA",
+      name: "A형간염",
+      icon: "🧬",
+      priority: false,
+      score: calcHepAScore(age, sel),
+      vaccine: "A형간염 백신 2회 접종",
+      explainHigh: "1980년 이후 출생자는 자연 면역이 없을 가능성이 높고, 만성 간질환이나 음주가 동반되면 급성 감염 시 전격성 간염 위험이 크게 증가합니다.",
+      explainMid: "항체 보유 여부가 불확실하거나 간 관련 위험인자가 있어 검토가 필요합니다.",
+      explainLow: "현재 특별한 위험인자가 없습니다. 항체 검사 후 필요 시 접종을 고려하세요.",
+    },
+    {
+      id: "hepB",
+      name: "B형간염",
+      icon: "🧫",
+      priority: false,
+      score: calcHepBScore(age, sel),
+      vaccine: "B형간염 백신 3회 접종",
+      explainHigh: "미접종 성인 중 의료기관 종사, 혈액투석, 만성 간질환, 면역저하가 있는 경우 B형간염 감염 및 만성화 위험이 크게 증가합니다.",
+      explainMid: "위험인자가 있어 항체 검사 및 접종 검토가 필요합니다.",
+      explainLow: "현재 특별한 위험인자가 없습니다. 미접종 상태라면 접종을 고려하세요.",
+    },
+    {
+      id: "rsv",
+      name: "RSV (호흡기세포융합바이러스)",
+      icon: "🌫️",
+      priority: false,
+      score: calcRsvScore(age, sel),
+      vaccine: "RSV 백신 1회 접종",
+      explainHigh: "60세 이상, 특히 만성 폐·심장질환이나 면역저하가 동반되면 RSV 감염 시 중증 폐렴 및 입원 위험이 크게 높아집니다.",
+      explainMid: "연령 또는 동반 질환으로 RSV 중증화 위험이 일반인보다 높습니다.",
+      explainLow: "현재 특별한 위험인자가 없습니다. 60세 이상이 되면 접종을 고려하세요.",
+    },
+  ];
+
+  return list.map(v => {
+    const grade   = getGrade(v.score);
+    const mult    = getMultiplier(v.score);
+    const urgency = getUrgency(v.score);
+    const explain = v.score >= 35 ? v.explainHigh : v.score >= 15 ? v.explainMid : v.explainLow;
+    return { ...v, grade, mult, urgency, explain };
+  });
+}
+
+const URGENCY_STYLE = {
+  "적극 권장": { bg: "rgba(239,68,68,0.15)",  border: "#ef444455", text: "#fca5a5", dot: "#ef4444" },
+  "검토 권장": { bg: "rgba(234,179,8,0.15)",  border: "#eab30855", text: "#fde047", dot: "#eab308" },
+  "해당 없음": { bg: "rgba(148,163,184,0.1)", border: "#94a3b833", text: "#94a3b8", dot: "#94a3b8" },
+};
+
+// ════════════════════════════════════════════════════
+//  App
+// ════════════════════════════════════════════════════
+function App() {
+  const [name, setName]       = useState("");
+  const [birthYear, setBirth] = useState("");
+  const [sel, setSel]         = useState({});
+  const [showResult, setShow] = useState(false);
+  const [animMap, setAnimMap] = useState({});
+
+  const currentYear = new Date().getFullYear();
+  const numBirth = parseInt(birthYear) || 0;
+  const numAge   = numBirth > 0 ? currentYear - numBirth : 0;
+  const vaccines = buildVaccines(numAge, sel);
+  // 폐렴구균을 항상 최상단 고정, 나머지는 점수 내림차순
+  const sortedVaccines = [
+    vaccines.find(v => v.id === "pneumo"),
+    ...vaccines.filter(v => v.id !== "pneumo").sort((a, b) => b.score - a.score),
+  ];
+  const selCount = Object.values(sel).filter(Boolean).length;
+
+  const toggle = (id) => setSel(p => ({ ...p, [id]: !p[id] }));
+
+  const analyze = () => {
+    setShow(true);
+    const initMap = {};
+    vaccines.forEach(v => { initMap[v.id] = { score: 0, mult: 1.0 }; });
+    setAnimMap(initMap);
+    setTimeout(() => {
+      let cur = {};
+      vaccines.forEach(v => { cur[v.id] = 0; });
+      const iv = setInterval(() => {
+        let done = true;
+        const next = {};
+        vaccines.forEach(v => {
+          const target = v.score;
+          const step = Math.max(target / 45, 0.6);
+          let c = cur[v.id] + step;
+          if (c >= target) c = target; else done = false;
+          cur[v.id] = c;
+          const m = target > 0 ? (1 + (v.mult - 1) * (c / target)) : 1.0;
+          next[v.id] = { score: Math.round(c), mult: parseFloat(m.toFixed(1)) };
+        });
+        setAnimMap(next);
+        if (done) clearInterval(iv);
+      }, 20);
+    }, 150);
+  };
+
+  const reset = () => { setShow(false); setName(""); setBirth(""); setSel({}); setAnimMap({}); };
+
+  // ── INPUT SCREEN ──
+  if (!showResult) {
+    return e("div", { style: { padding: "24px 16px" } },
+      e("div", { style: { maxWidth: 520, margin: "0 auto" } },
+
+        e("div", { style: { textAlign: "center", marginBottom: 28 } },
+          e("div", { style: { fontSize: 40, marginBottom: 8 } }, "💉"),
+          e("h1", { style: { fontSize: 22, fontWeight: 900, letterSpacing: "-0.5px" } },
+            "성인 필수예방접종 ", e("span", { style: { color: "#60a5fa" } }, "분석기")
+          ),
+          e("p", { style: { color: "#64748b", fontSize: 13, marginTop: 6, lineHeight: 1.6 } },
+            "출생년도와 기저질환을 입력하면", e("br"),
+            "폐렴구균·독감·대상포진·간염·RSV 접종 필요성을 확인할 수 있습니다"
+          )
+        ),
+
+        e("div", { className: "card card-name", style: { padding: 20, marginBottom: 14 } },
+          e("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 } },
+            e("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+              e("span", { style: { fontSize: 18 } }, "👤"),
+              e("span", { style: { fontSize: 14, fontWeight: 800, color: "#bfdbfe", letterSpacing: "1px" } }, "환자 이름")
+            ),
+            e("span", { className: "section-tag", style: { background: "rgba(96,165,250,0.18)", color: "#93c5fd" } }, "STEP 1")
+          ),
+          e("input", {
+            className: "ainput", type: "text",
+            placeholder: "이름을 입력하세요",
+            value: name, onChange: ev => setName(ev.target.value)
+          })
+        ),
+
+        e("div", { className: "card card-birth", style: { padding: 20, marginBottom: 14 } },
+          e("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 } },
+            e("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+              e("span", { style: { fontSize: 18 } }, "🎂"),
+              e("span", { style: { fontSize: 14, fontWeight: 800, color: "#e9d5ff", letterSpacing: "1px" } }, "출생년도")
+            ),
+            e("span", { className: "section-tag", style: { background: "rgba(168,85,247,0.18)", color: "#d8b4fe" } }, "STEP 2")
+          ),
+          e("input", {
+            className: "ainput", type: "number",
+            min: "1900", max: String(currentYear),
+            placeholder: "출생년도를 입력하세요 (예: 1958)",
+            value: birthYear, onChange: ev => setBirth(ev.target.value)
+          }),
+          numAge > 0 && e("div", { style: { marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } },
+            e("span", { style: { fontSize: 13, color: "#cbd5e1" } },
+              "→ 만 ", e("strong", { style: { color: "#f1f5f9" } }, numAge + "세")
+            ),
+            numAge >= 65 && e("span", { className: "badge", style: { color: "#60a5fa", background: "rgba(59,130,246,0.12)" } }, "✅ 65세 이상 다수 백신 필수 접종 대상"),
+            numAge >= 50 && numAge < 65 && e("span", { className: "badge", style: { color: "#fb923c", background: "rgba(249,115,22,0.12)" } }, "⚡ 50대 — 대상포진 등 확인 필요")
+          )
+        ),
+
+        e("div", { className: "card card-conditions", style: { padding: 20, marginBottom: 18 } },
+          e("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 } },
+            e("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+              e("span", { style: { fontSize: 18 } }, "📋"),
+              e("span", { style: { fontSize: 14, fontWeight: 800, color: "#bbf7d0", letterSpacing: "1px" } }, "기저질환 / 위험인자"),
+              e("span", { className: "section-tag", style: { background: "rgba(34,197,94,0.18)", color: "#86efac" } }, "STEP 3")
+            ),
+            selCount > 0 && e("span", { style: { background: "#22c55e", color: "#052e16", fontSize: 12, fontWeight: 800, borderRadius: 20, padding: "2px 10px" } }, selCount + "개 선택")
+          ),
+          e("div", { className: "grid2" },
+            CONDITIONS.map(c =>
+              e("button", {
+                key: c.id,
+                className: "cbtn" + (sel[c.id] ? " on" : ""),
+                onClick: () => toggle(c.id)
+              },
+                e("span", { style: { fontSize: 18 } }, c.icon),
+                e("span", { style: { lineHeight: 1.3 } }, c.label),
+                sel[c.id] && e("span", { style: { marginLeft: "auto", color: "#22c55e", fontWeight: 900 } }, "✓")
+              )
+            )
+          )
+        ),
+
+        e("button", { className: "abtn", disabled: !birthYear || numAge < 1, onClick: analyze }, "접종 필요 백신 분석하기 →")
+      )
+    );
+  }
+
+  // ── RESULT SCREEN ──
+  return e("div", { style: { padding: "24px 16px" } },
+    e("div", { className: "fadeup", style: { maxWidth: 520, margin: "0 auto" } },
+
+      e("div", { style: { marginBottom: 14, padding: "10px 14px", background: "rgba(255,255,255,0.06)", borderRadius: 10, display: "flex", alignItems: "center", gap: 8 } },
+        e("span", { style: { fontSize: 16 } }, "👤"),
+        name && e("span", { style: { fontSize: 16, fontWeight: 700, color: "#f1f5f9" } }, name),
+        e("span", { style: { fontSize: 13, color: "#64748b" } }, (name ? " · " : "") + birthYear + "년생 (만 " + numAge + "세)")
+      ),
+
+      e("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 12, padding: "0 4px" } },
+        e("span", { style: { fontSize: 16 } }, "💉"),
+        e("span", { style: { fontSize: 13, fontWeight: 700, color: "#94a3b8", letterSpacing: "1px" } }, "백신별 위험도 & 접종 권장 사항")
+      ),
+
+      sortedVaccines.map(v => {
+        const us  = URGENCY_STYLE[v.urgency];
+        const am  = animMap[v.id] || { score: 0, mult: 1.0 };
+        return e("div", {
+          key: v.id,
+          className: "card vaccine-card" + (v.priority ? " priority" : ""),
+          style: { borderColor: v.grade.color + "55" }
+        },
+          e("div", { className: "vaccine-header" },
+            e("div", { className: "vaccine-name" },
+              e("span", null, v.icon),
+              e("span", null, v.name)
+            ),
+            e("div", { className: "vaccine-mult", style: { color: v.grade.color } },
+              am.mult.toFixed(1), e("span", null, "배 위험")
+            )
+          ),
+          e("div", { className: "vaccine-urgency", style: { background: us.bg, color: us.text, border: "1px solid " + us.border } },
+            "● " + v.urgency + "  (" + am.score + "점 / " + v.grade.label + ")"
+          ),
+          e("div", { className: "vaccine-bar-wrap" },
+            e("div", { className: "vaccine-bar-fill", style: { width: am.score + "%", background: "linear-gradient(90deg," + v.grade.color + "66," + v.grade.color + ")" } })
+          ),
+          e("p", { className: "vaccine-explain" }, v.explain),
+          v.urgency !== "해당 없음" && e("div", { style: { marginTop: 8, fontSize: 12, color: v.grade.color, fontWeight: 700 } },
+            "💊 " + v.vaccine
+          )
+        );
+      }),
+
+      e("div", { style: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 16px", marginTop: 18, marginBottom: 18 } },
+        e("p", { style: { fontSize: 12, color: "#475569", lineHeight: 1.8 } },
+          "⚕️ ", e("strong", { style: { color: "#64748b" } }, "의료진 참고용:"),
+          " 본 결과는 질병관리청 성인 예방접종 지침 기반 참고 자료입니다. 모든 항목 중 ",
+          e("strong", { style: { color: "#fca5a5" } }, "폐렴구균 백신이 최우선 권장"),
+          " 대상이며, 실제 접종 여부와 우선순위는 임상 상태·접종 이력·금기사항을 고려하여 담당 의사와 상담 후 결정하시기 바랍니다."
+        )
+      ),
+
+      e("button", { className: "rbtn", onClick: reset }, "← 다시 입력하기")
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
